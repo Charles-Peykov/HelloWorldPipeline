@@ -35,6 +35,10 @@ Resources:
       Code:
         S3Bucket: !Ref S3BucketName
         S3Key: !Ref S3Key
+    # Use the CodeVersion parameter in a way that doesn't affect the function's behavior
+      Environment:
+        Variables:
+          CODE_VERSION: !Ref CodeVersion
 
 
 #  Define an IAM role for the Lambda function, allowing it to write logs.
