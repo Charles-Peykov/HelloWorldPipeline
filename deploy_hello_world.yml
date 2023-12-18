@@ -1,0 +1,155 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: A simple AWS CloudFormation template for a serverless 'Hello World' application.
+
+Parameters:
+
+#  Define the parameter that is used to pass the name of S3 bucket where the Lambda function code is stored
+  S3BucketName:
+    Type: String
+    Description: The name of the S3 bucket where the Lambda function code is stored
+    
+#  Define the parameter that is used to pass the S3 key to the ZIP file containing the Lambda function code
+  S3Key:
+    Type: String
+    Description: The S3 key (path) to the ZIP file containing the Lambda function code
+    
+#  Define the parameter that is used to pass the email which we be subscribed to the Alarm
+  AlertEmail:
+    Type: String
+    Description: Email address to receive alerts
+
+Resources:
+
+#  Define the Python function, using the provided S3 bucket and S3 key
+  HelloWorldFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      Handler: lambda_function.handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Runtime: python3.8
+      Code:
+        S3Bucket: !Ref S3BucketName
+        S3Key: !Ref S3Key
+
+
+#  Define an IAM role for the Lambda function, allowing it to write logs.
+  LambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+      Policies:
+        - PolicyName: LambdaExecutionPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 'logs:*'
+                Resource: 'arn:aws:logs:*:*:*'
+
+#  Set up an HTTP API Gateway.
+  ApiGateway:
+    Type: AWS::ApiGatewayV2::Api
+    Properties:
+      Name: HelloWorldAPI
+      ProtocolType: HTTP
+
+#  Create an integration between the API Gateway and the Lambda function.
+  ApiGatewayIntegration:
+    Type: AWS::ApiGatewayV2::Integration
+    Properties:
+      ApiId: !Ref ApiGateway
+      IntegrationType: AWS_PROXY
+      IntegrationUri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${HelloWorldFunction.Arn}/invocations
+      PayloadFormatVersion: '2.0'
+
+#  Define a route (/hello) for the API Gateway and attaches the Lambda integration.
+  ApiGatewayRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref ApiGateway
+      RouteKey: GET /hello
+      Target: !Join ['/', ['integrations', !Ref ApiGatewayIntegration]]
+
+#  Deploy the API to a stage named 'prod'.
+  ApiGatewayStage:
+    Type: AWS::ApiGatewayV2::Stage
+    Properties:
+      ApiId: !Ref ApiGateway
+      StageName: 'prod'
+      AutoDeploy: true
+
+#  Grant the API Gateway permission to invoke the Lambda function.
+  LambdaPermissionForApiGateway:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref HelloWorldFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ApiGateway}/*
+
+#  Create the SNS topic for the alarm that monitors for errors
+  AlarmSNSTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      DisplayName: "My CloudFormation SNS Topic"
+      TopicName: "MyCloudFormationTopic"
+      
+#  Subscribe to the SNS topic with the email provided as a parameter
+  SNSEmailSubscription:
+    Type: AWS::SNS::Subscription
+    Properties:
+      Protocol: "email"
+      Endpoint: !Ref AlertEmail
+      TopicArn: !Ref AlarmSNSTopic
+   
+#  Create an Alarm for errors in the Lambda function
+  LambdaFunctionErrorAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmDescription: "Alarm if the lambda function encounters errors"
+      Namespace: "AWS/Lambda"
+      MetricName: "Errors"
+      Dimensions:
+        - Name: "FunctionName"
+          Value: !Ref HelloWorldFunction
+      Statistic: "Sum"
+      Period: 300
+      EvaluationPeriods: 1
+      Threshold: 1
+      ComparisonOperator: "GreaterThanOrEqualToThreshold"
+      AlarmActions:
+        - !Ref AlarmSNSTopic
+      
+#  Create an Alarm for internal errors in the API Gateway
+  ApiGateway5XXErrorAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmDescription: "Alarm if the API gateway encounters 5XX errors"
+      Namespace: "AWS/ApiGateway"
+      MetricName: "5XXError"
+      Dimensions:
+        - Name: "ApiName"
+          Value: !Ref ApiGateway
+      Statistic: "Sum"
+      Period: 300
+      EvaluationPeriods: 1
+      Threshold: 1
+      ComparisonOperator: "GreaterThanOrEqualToThreshold"
+      AlarmActions:
+        - !Ref AlarmSNSTopic
+
+#  Provide the endpoint URL of the deployed API in the Outputs.
+Outputs:
+  EndpointUrl:
+    Description: "API Gateway endpoint URL"
+    Value: !Sub https://${ApiGateway}.execute-api.${AWS::Region}.amazonaws.com/prod/hello
+
