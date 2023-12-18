@@ -30,5 +30,5 @@ jobs:
         aws cloudformation deploy \
           --template-file deploy_hello_world.yml \
           --stack-name HelloWorldStack \
-          --parameter-overrides S3BucketName=${{ vars.S3_BUCKET_NAME }} S3Key=${{ vars.S3_KEY }} AlertEmail=${{ vars.ALERT_EMAIL }} \
+          --parameter-overrides S3BucketName=${{ vars.S3_BUCKET_NAME }} S3Key=${{ vars.S3_KEY }} AlertEmail=${{ vars.ALERT_EMAIL }} CodeVersion=${{ github.sha }} \
           --capabilities CAPABILITY_IAM

@@ -17,6 +17,11 @@ Parameters:
   AlertEmail:
     Type: String
     Description: Email address to receive alerts
+    
+#  Define a parameter that is used to make releases unique, even if the deploy script is unchanged
+  CodeVersion:
+    Type: String
+    Description: A version number for the Lambda code
 
 Resources:
 
