@@ -27,6 +27,7 @@ jobs:
       run: |
         OUTPUT=$(aws s3api put-object --bucket ${{ vars.S3_BUCKET_NAME }} --key lambda_function.zip --body lambda_function.zip)
         VERSION_ID=$(echo $OUTPUT | jq -r '.VersionId')
+        echo "Version ID: $VERSION_ID"
         echo "::set-output name=version_id::$VERSION_ID"
 
 
