@@ -89,3 +89,4 @@ Monitoring
 - Registering the function to a more user-friendly URL using AWS Route 53 to configure the DNS.
 - Implementing HTTPS by setting up SSL/TLS certificates using AWS Certificate Manager.
 - Making the function available in other regions besides by deploying the Stack in them as well.
+- Completing the CI/CD by adding automated tests in the workflow, and only deploy if all tests pass. Depending on the nature of the tests, it could make sense to run them in a Docker container
