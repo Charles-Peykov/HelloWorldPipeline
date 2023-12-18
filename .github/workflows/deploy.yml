@@ -22,7 +22,7 @@ jobs:
     - name: Deploy CloudFormation Stack
       run: |
         aws cloudformation deploy \
-          --template-file deploy_hello_world.yaml \
+          --template-file deploy_hello_world.yml \
           --stack-name HelloWorldStack \
           --parameter-overrides S3BucketName=$S3_BUCKET_NAME S3Key=$S3_KEY AlertEmail=$ALERT_EMAIL \
           --capabilities CAPABILITY_IAM
