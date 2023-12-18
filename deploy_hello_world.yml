@@ -19,10 +19,9 @@ Parameters:
     Description: Email address to receive alerts
     
 #  Define the parameter that is used to pass version of the handler code
-    Parameters:
-      S3ObjectVersion:
-        Type: String
-        Description: The version ID of the Lambda function code in the S3 bucket
+  S3ObjectVersion:
+    Type: String
+    Description: The version ID of the Lambda function code in the S3 bucket
 
 
 Resources:
