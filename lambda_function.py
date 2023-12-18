@@ -6,5 +6,5 @@ def handler(event, context):
   current_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
   return {
       'statusCode': 200,
-      'body': json.dumps('Hello World!!! Current time: ' + current_time)
+      'body': json.dumps('Hello World! Current time: ' + current_time)
   }
