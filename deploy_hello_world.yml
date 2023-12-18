@@ -18,10 +18,12 @@ Parameters:
     Type: String
     Description: Email address to receive alerts
     
-#  Define a parameter that is used to make releases unique, even if the deploy script is unchanged
-  CodeVersion:
-    Type: String
-    Description: A version number for the Lambda code
+#  Define the parameter that is used to pass version of the handler code
+    Parameters:
+      S3ObjectVersion:
+        Type: String
+        Description: The version ID of the Lambda function code in the S3 bucket
+
 
 Resources:
 
@@ -35,11 +37,7 @@ Resources:
       Code:
         S3Bucket: !Ref S3BucketName
         S3Key: !Ref S3Key
-    # Use the CodeVersion parameter in a way that doesn't affect the function's behavior
-      Environment:
-        Variables:
-          CODE_VERSION: !Ref CodeVersion
-
+        S3ObjectVersion: !Ref S3ObjectVersion
 
 #  Define an IAM role for the Lambda function, allowing it to write logs.
   LambdaExecutionRole:
