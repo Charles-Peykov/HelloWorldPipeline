@@ -29,9 +29,9 @@ jobs:
         VERSION_ID=$(echo $OUTPUT | jq -r '.VersionId')
         echo "Version ID: $VERSION_ID"
         echo "::set-output name=version_id::$VERSION_ID"
-
+        
     - name: Wait for S3 version consistency
-      run: sleep 15
+      run: sleep 10
 
     - name: Deploy CloudFormation Stack
       run: |
