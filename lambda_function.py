@@ -2,7 +2,7 @@ import json
 from datetime import datetime
 
 def handler(event, context):
-  print("Function called")
+  print("Function called!")
   current_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
   return {
       'statusCode': 200,
